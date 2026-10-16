@@ -3,6 +3,8 @@ from operator import ne
 import mysql.connector
 import redis
 import os
+from decimal import Decimal
+import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,7 +13,7 @@ senha = os.getenv("MYSQL_SENHA")
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 mydb = mysql.connector.connect(
-  host="127.0.0.1",
+  host="localhost",
   user="root",
   password=senha,
   database="tpch"
@@ -41,7 +43,7 @@ def getPedido(idpedido: int):
             o.O_CLERK,
             o.O_SHIPPRIORITY,
             o.O_COMMENT
-        FROM orders o
+        FROM ORDERS o
         WHERE o.O_ORDERKEY = %s
     """
     cursor.execute(query, (idpedido,))
@@ -60,7 +62,7 @@ def getPedido(idpedido: int):
             l.L_TAX,
             l.L_RETURNFLAG,
             l.L_LINESTATUS
-        FROM lineitem l
+        FROM LINEITEM l
         WHERE l.L_ORDERKEY = %s
     """
     cursor.execute(query_itens, (idpedido,))
@@ -73,7 +75,7 @@ def getPedido(idpedido: int):
     return pedido
 
 def atualizarPedido(idpedido: int, novo_status: str):
-    query = "UPDATE orders SET O_ORDERSTATUS = %s WHERE O_ORDERKEY = %s"
+    query = "UPDATE ORDERS SET O_ORDERSTATUS = %s WHERE O_ORDERKEY = %s"
     cursor.execute(query, (novo_status, idpedido))
     mydb.commit()
 
