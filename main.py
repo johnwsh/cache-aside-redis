@@ -1,11 +1,18 @@
-from operator import ne
-
+import os
+import json
+import time
+from decimal import Decimal
+from datetime import date, datetime
 import mysql.connector
 import redis
-import os
-from decimal import Decimal
-import datetime
 from dotenv import load_dotenv
+
+def serializacao_personalizada(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)
+    if isinstance(obj, (date, datetime)):
+        return obj.isoformat()
+    raise TypeError(f"Tipo {type(obj)} não serializável")
 
 load_dotenv()
 
@@ -13,7 +20,7 @@ senha = os.getenv("MYSQL_SENHA")
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 mydb = mysql.connector.connect(
-  host="localhost",
+  host="127.0.0.1",
   user="root",
   password=senha,
   database="tpch"
@@ -28,7 +35,7 @@ def getPedido(idpedido: int):
 
     if cached_data:
         print("Cache hit")
-        return eval(cached_data)
+        return json.loads(cached_data)
 
     print("Cache miss")
 
@@ -70,7 +77,7 @@ def getPedido(idpedido: int):
 
     pedido['itens'] = itens
 
-    r.set(cache_key, str(pedido), ex=3600)
+    r.set(cache_key, json.dumps(pedido, default=serializacao_personalizada), ex=360)
 
     return pedido
 
